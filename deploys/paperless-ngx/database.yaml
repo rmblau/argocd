@@ -6,7 +6,7 @@ metadata:
 spec:
   instances: 3
   storage:
-    size: 50Gi
+    size: 20Gi
   bootstrap:
     initdb:
       database: paperless
