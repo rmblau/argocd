@@ -12,6 +12,8 @@ spec:
     helm:
       releaseName: akaunting
       values: |
+        image:
+          tag: "3.2.3"
         env:
           - name: COMPANY_NAME
             value: "RMBlau Consulting LLC"
