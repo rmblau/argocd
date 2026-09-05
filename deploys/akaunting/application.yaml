@@ -14,9 +14,9 @@ spec:
       values: |
         resources:
           limits:
-            memory: 512Mi
+            memory: 1024Mi
           requests:
-            cpu: 250m
+            cpu: 1000m
             memory: 256Mi
         env:
           - name: COMPANY_NAME
