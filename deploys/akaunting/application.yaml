@@ -32,7 +32,7 @@ spec:
           # Keep both disabled during normal operation. See README.md for the
           # one-time bootstrap and upgrade procedure.
           - name: AKAUNTING_UPGRADE
-            value: "false"
+            value: "true"
           - name: AKAUNTING_SETUP
             value: "false"
 
