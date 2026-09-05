@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: paperless-ingress
+  namespace: paperless
+spec:
+  entryPoints:
+    - websecure  # Only use the HTTPS entrypoint here
+  routes:
+    - kind: Rule
+      match: Host(`paperless.rmblau.com`)
+      priority: 20 # Bump priority higher than ArgoCD just to isolate
+      services:
+        - name: paperless-ngx
+          port: 80
+  tls:
+    certResolver: letsencrypt-dns01-issuer

@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: paperless-ngx
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: codeberg.org/wrenix/helm-charts
+    chart: paperless-ngx
+    targetRevision: 0.3.19
+    helm:
+      values: |
+        postgresql:
+          enabled: false
+
+        valkey:
+          internal: true
+        livenessProbe:
+          enabled: true
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
+
+        persistence:
+          enabled: true
+          accessModes:
+            - ReadWriteOnce
+          size: 10Gi
+          storageClass: longhorn
+
+        env:
+          PAPERLESS_DBHOST: paperless-db-rw.paperless.svc.cluster.local
+          PAPERLESS_DBNAME: paperless
+          PAPERLESS_DBUSER: paperless
+          PAPERLESS_URL: https://paperless.rmblau.com
+          PAPERLESS_DBPASS:
+            valueFrom:
+              secretKeyRef:
+                name: paperless-db-app
+                key: password
+
+        ingress:
+          enabled: false
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: paperless
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
