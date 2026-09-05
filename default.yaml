@@ -13,6 +13,8 @@ spec:
     path: deploys
     repoURL: https://github.com/rmblau/argocd
     targetRevision: main
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

@@ -14,7 +14,7 @@ spec:
       values: |
         env:
           - name: COMPANY_NAME
-            value: RMBlau Consulting LLC"
+            value: "RMBlau Consulting LLC"
           - name: COMPANY_EMAIL
             value: "matthew@rmblau.com"
           - name: APP_URL
