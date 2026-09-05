@@ -1,0 +1,18 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: harbor-ingress
+  namespace: harbor
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`harbor.rmblau.com`)
+    kind: Rule
+    middlewares:
+    - name: harbor-buffering
+    services:
+    - name: harbor
+      port: 80
+  tls:
+    certResolver: letsencrypt-dns01-issuer

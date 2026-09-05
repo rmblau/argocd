@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: harbor
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    # Source 1: The Official Harbor Helm Chart
+    - repoURL: https://helm.goharbor.io
+      chart: harbor
+      targetRevision: 1.14.0
+      helm:
+        values: |
+          externalURL: https://harbor.rmblau.com
+          expose:
+            type: clusterIP
+            tls:
+              enabled: false # Traefik handles SSL termination
+          ingress:
+            enabled: false # Disable default K8s Ingress
+          persistence:
+            enabled: true
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: harbor
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
