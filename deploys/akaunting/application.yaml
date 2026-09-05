@@ -1,0 +1,79 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: akaunting
+  namespace: argocd
+spec:
+  project: default
+  source:
+    chart: akaunting
+    repoURL: https://f3k-tech.github.io/helm
+    targetRevision: 1.3121.0
+    helm:
+      releaseName: akaunting
+      values: |
+        env:
+          - name: COMPANY_NAME
+            value: RMBlau Consulting LLC"
+          - name: COMPANY_EMAIL
+            value: "matthew@rmblau.com"
+          - name: APP_URL
+            value: "https://akaunting.rmblau.com"
+          - name: DB_PREFIX
+            value: "aka_"
+          - name: LOCALE
+            value: en-US
+          # Keep both disabled during normal operation. See README.md for the
+          # one-time bootstrap and upgrade procedure.
+          - name: AKAUNTING_UPGRADE
+            value: "true"
+          - name: AKAUNTING_SETUP
+            value: "true"
+
+        # The chart generates and preserves the administrator and database
+        # passwords in Kubernetes Secrets. Do not put those values in Git.
+        secrets:
+          admin:
+            email: matthew@rmblau.com
+
+        persistence:
+          data:
+            enabled: true
+            size: 10Gi
+
+        mariadb:
+          auth:
+            username: akaunting
+            database: akaunting
+            rootPassword: ""
+            password: ""
+          primary:
+            persistence:
+              enabled: true
+              size: 10Gi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: akaunting
+  ignoreDifferences:
+    # Both chart-managed Secrets contain generated credentials. Ignoring their
+    # data prevents Argo CD from continually detecting freshly rendered random
+    # values after the initial sync.
+    - group: ""
+      kind: Secret
+      name: akaunting-secret
+      namespace: akaunting
+      jsonPointers:
+        - /data
+    - group: ""
+      kind: Secret
+      name: akaunting-mariadb
+      namespace: akaunting
+      jsonPointers:
+        - /data
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
