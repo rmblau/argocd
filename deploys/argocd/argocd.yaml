@@ -1,0 +1,112 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+
+spec:
+  project: default
+
+  source:
+    repoURL: https://argoproj.github.io/argo-helm
+    chart: argo-cd
+    targetRevision: 10.7.2
+    helm:
+      values: |
+        global:
+          rbac:
+            create: true
+
+        redis:
+          enabled: true
+
+        controller:
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+              additionalLabels:
+                release: kube-prometheus-stack
+
+        repoServer:
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+              additionalLabels:
+                release: kube-prometheus-stack
+          # Loosened so transient apiserver/control-plane slowness does not
+          # trip the 1s default probe and crash-loop the repo-server.
+          livenessProbe:
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            timeoutSeconds: 5
+            failureThreshold: 5
+
+        applicationSet:
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+              additionalLabels:
+                release: kube-prometheus-stack
+
+        server:
+          service:
+            type: ClusterIP
+          ingress:
+            enabled: false
+          extraArgs:
+            - --insecure
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+              additionalLabels:
+                release: kube-prometheus-stack
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+
+  syncPolicy:
+    automated:
+      prune: false            # 🚨 never let Argo CD delete itself
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - ApplyOutOfSyncOnly=true
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+
+  ignoreDifferences:
+    # Avoid restarts due to replica drift
+    - group: apps
+      kind: Deployment
+      name: argocd-server
+      jsonPointers:
+        - /spec/replicas
+
+    # Kubernetes assigns this dynamically
+    - group: ""
+      kind: Service
+      name: argocd-server
+      jsonPointers:
+        - /spec/clusterIP
+
+    # Optional: avoid noisy diffs on secrets
+    - group: ""
+      kind: Secret
+      name: argocd-secret
+      jsonPointers:
+        - /data
