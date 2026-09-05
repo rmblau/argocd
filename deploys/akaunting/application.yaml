@@ -26,9 +26,9 @@ spec:
           # Keep both disabled during normal operation. See README.md for the
           # one-time bootstrap and upgrade procedure.
           - name: AKAUNTING_UPGRADE
-            value: "true"
+            value: "false"
           - name: AKAUNTING_SETUP
-            value: "true"
+            value: "false"
 
         # The chart generates and preserves the administrator and database
         # passwords in Kubernetes Secrets. Do not put those values in Git.
