@@ -8,7 +8,7 @@ spec:
     - websecure
   routes:
     - kind: Rule
-      match: Host(`akaunting.rmblau.com`)
+      match: Host(`consulting.rmblau.com`)
       services:
         - name: akaunting
           port: 80

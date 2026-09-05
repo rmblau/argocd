@@ -18,7 +18,7 @@ spec:
           - name: COMPANY_EMAIL
             value: "matthew@rmblau.com"
           - name: APP_URL
-            value: "https://akaunting.rmblau.com"
+            value: "https://consulting.rmblau.com"
           - name: DB_PREFIX
             value: "aka_"
           - name: LOCALE
