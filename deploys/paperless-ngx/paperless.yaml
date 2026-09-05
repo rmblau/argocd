@@ -31,7 +31,7 @@ spec:
           storageClass: longhorn
 
         env:
-          PAPERLESS_DBHOST: paperless-db-rw.paperless.svc.cluster.local
+          PAPERLESS_DBHOST: paperless-db-rw.paperless-ngx.svc.cluster.local
           PAPERLESS_DBNAME: paperless
           PAPERLESS_DBUSER: paperless
           PAPERLESS_URL: https://paperless.rmblau.com
