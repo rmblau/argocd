@@ -1,0 +1,132 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+spec:
+  project: default
+  source:
+    chart: traefik
+    repoURL: https://traefik.github.io/charts
+    targetRevision: 41.4.0
+    helm:
+      values: |
+        additionalArguments:
+          - "--entrypoints.web.transport.respondingTimeouts.readTimeout=0" # Optional: Helps with large file uploads
+          - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+          - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+          - "--providers.kubernetescrd.allowCrossNamespace=true"
+          # NEW SYNTAX FOR TRUSTED IPS:
+          - "--entrypoints.web.forwardedHeaders.trustedIPs=10.42.0.0/16"
+          - "--entrypoints.websecure.forwardedHeaders.trustedIPs=10.42.0.0/16"
+        persistence:
+          enabled: true
+        certificatesResolvers:
+          letsencrypt-dns01-issuer:
+            acme:
+              email: mrb1105@proton.me
+              storage: /data/acme.json
+              dnschallenge:
+                provider: cloudflare
+                resolvers:
+                  - 1.1.1.1:53
+                  - 8.8.8.8:53
+                disablePropagationCheck: true
+                delayBeforeCheck: 90
+        
+        env:
+          - name: CLOUDFLARE_EMAIL
+            value: "mrb1105@proton.me"
+          - name: CLOUDFLARE_DNS_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-api-key-secret
+                key: api-key 
+          - name: CLOUDFLARE_ZONE_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-api-key-secret
+                key: api-key
+        
+        deployment:
+          kind: Deployment
+          # Single active replica: Traefik OSS file-based ACME (acme.json on an
+          # RWO PVC) does not support active-active. HA is achieved via fast
+          # failover instead — see tolerations below + Longhorn
+          # node-down-pod-deletion-policy=delete-both-statefulset-and-deployment-pod.
+          replicas: 1
+          initContainers:
+            - name: volume-permissions
+              image: busybox:latest
+              command: ["sh", "-c", "touch /data/acme.json; chmod -v 600 /data/acme.json"]
+              volumeMounts:
+                - mountPath: /data
+                  name: data
+        podSecurityContext:
+          fsGroup: 65532
+          fsGroupChangePolicy: "OnRootMismatch"
+        # RWO acme.json PVC + default RollingUpdate (maxSurge:1) deadlocks
+        # on upgrades: the new pod can't mount the volume the old pod holds,
+        # so static config (entrypoints) never reloads. Recreate fixes it.
+        updateStrategy:
+          type: Recreate
+          rollingUpdate: null
+
+        # Fast failover: reschedule the pod ~30s after its node goes
+        # unreachable/not-ready, instead of the 300s default, so a dead node
+        # doesn't keep Traefik down for 5 minutes.
+        tolerations:
+          - key: "node.kubernetes.io/unreachable"
+            operator: "Exists"
+            effect: "NoExecute"
+            tolerationSeconds: 30
+          - key: "node.kubernetes.io/not-ready"
+            operator: "Exists"
+            effect: "NoExecute"
+            tolerationSeconds: 30
+
+        service:
+          type: LoadBalancer
+        
+        ports:
+          web:
+            expose:
+              default: true
+            port: 8000
+            exposedPort: 80
+            protocol: TCP
+          websecure:
+            expose:
+              default: true
+            port: 8443
+            exposedPort: 443
+            protocol: TCP
+          irc: # raw-TCP entrypoint for IRC-over-TLS (ZNC)
+            expose:
+              default: true
+            port: 6697
+            exposedPort: 6697
+            protocol: TCP
+
+        ingressRoute:
+          dashboard:
+            enabled: true
+            entryPoints:
+              - web
+              - websecure
+            # Define the Host rule for your domain
+            matchRule: Host(`traefik.rmblau.com`)
+            middlewares:
+              - name: basic-auth-global
+                namespace: traefik
+            tls:
+              certResolver: letsencrypt-dns01-issuer
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
