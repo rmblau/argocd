@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: actualbudget
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: actualbudget
+spec:
+  project: default
+  sources:
+    - repoURL: https://community-charts.github.io/helm-charts
+      chart: actualbudget
+      targetRevision: 1.9.4
+      helm:
+        releaseName: actualbudget
+        values: |
+          fullnameOverride: actualbudget
+          persistence:
+            enabled: true
+            size: 10Gi
+          ingress:
+            enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: actualbudget
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
