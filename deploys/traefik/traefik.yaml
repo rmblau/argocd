@@ -40,12 +40,12 @@ spec:
           - name: CLOUDFLARE_DNS_API_TOKEN
             valueFrom:
               secretKeyRef:
-                name: cloudflare-api-key-secret
+                name: cloudflare-api-key
                 key: api-key 
           - name: CLOUDFLARE_ZONE_API_TOKEN
             valueFrom:
               secretKeyRef:
-                name: cloudflare-api-key-secret
+                name: cloudflare-api-key
                 key: api-key
         
         deployment:
