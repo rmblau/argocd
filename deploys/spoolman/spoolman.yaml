@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spoolman
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://ideaplexus.gitlab.io/charts
+    chart: spoolman
+    targetRevision: "2.x"  # Pin to a specific version or leave loose for latest 2.x
+    helm:
+      values: |
+        persistence:
+          enabled: true
+          size: 1Gi
+        ingress:
+          enabled: false 
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: spoolman
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
