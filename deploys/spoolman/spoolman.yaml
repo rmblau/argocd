@@ -17,7 +17,11 @@ spec:
           enabled: true
           size: 1Gi
         ingress:
-          enabled: false 
+          enabled: false
+        livenessProbe:
+          enabled: false
+        readinessProbe:
+          enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: spoolman
