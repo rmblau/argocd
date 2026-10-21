@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: https://community-charts.github.io/helm-charts
       chart: actualbudget
-      targetRevision: 1.9.4
+      targetRevision: 1.9.5
       helm:
         releaseName: actualbudget
         values: |
