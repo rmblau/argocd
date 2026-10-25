@@ -1,0 +1,36 @@
+apiVersion: ://coreos.com
+kind: PrometheusRule
+metadata:
+  name: pod-resource-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack 
+spec:
+  groups:
+  - name: pod-resource-usage.rules
+    rules:    
+    - alert: PodCpuUsageHigh
+      expr: |
+        sum(rate(container_cpu_usage_seconds_total{container!="",container!="POD"}[5m])) by (namespace, pod)
+        /
+        sum(kube_pod_container_resource_limits{resource="cpu"}) by (namespace, pod)
+        * 100 > 85
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage on Pod {{ $labels.namespace }}/{{ $labels.pod }}"
+        description: "Pod {{ $labels.pod }} is utilizing {{ printf \"%.2f\" $value }}% of its configured CPU limit for more than 5 minutes."
+
+    - alert: PodMemoryUsageHigh
+      expr: |
+        sum(container_memory_working_set_bytes{container!="",container!="POD"}) by (namespace, pod)
+        /
+        sum(kube_pod_container_resource_limits{resource="memory"}) by (namespace, pod)
+        * 100 > 85
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High Memory usage on Pod {{ $labels.namespace }}/{{ $labels.pod }}"
+        description: "Pod {{ $labels.pod }} is utilizing {{ printf \"%.2f\" $value }}% of its configured Memory limit for more than 10 minutes."
