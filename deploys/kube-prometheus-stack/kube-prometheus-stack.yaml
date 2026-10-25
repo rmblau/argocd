@@ -5,22 +5,34 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://prometheus-community.github.io/helm-charts
-    chart: kube-prometheus-stack
-    targetRevision: 92.13.1
-    helm:
-      values: |
-        grafana:
-          service:
-            type: ClusterIP
-        prometheus:
-          prometheusSpec:
-            serviceMonitorSelector: {}
-            serviceMonitorNamespaceSelector: {}
+
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 92.13.1
+      helm:
+        values: |
+          grafana:
+            service:
+              type: ClusterIP
+          prometheus:
+            prometheusSpec:
+              serviceMonitorSelector: {}
+              serviceMonitorNamespaceSelector: {}
+                    alertmanager:
+          alertmanagerSpec:
+            alertmanagerConfigSelector:
+              matchLabels:
+                app.kubernetes.io/component: pod-alerts
+
+    - repoURL: https://github.com/rmblau/argocd.git
+      targetRevision: main
+      path: deploys/kube-prometheus-stack
+
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
+
   syncPolicy:
     automated:
       prune: true

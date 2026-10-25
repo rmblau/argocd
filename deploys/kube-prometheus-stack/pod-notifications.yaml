@@ -1,0 +1,38 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: pod-alert-notifications
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/component: pod-alerts
+spec:
+  route:
+    receiver: discord-pod-alerts
+    groupBy:
+      - namespace
+      - alertname
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    matchers:
+      - name: severity
+        matchType: "="
+        value: warning
+
+  receivers:
+    - name: discord-pod-alerts
+      discordConfigs:
+        - apiURL:
+            name: discord-webhook
+            key: url
+          sendResolved: true
+          title: '{{ if eq .Status "firing" }}🚨{{ else }}✅{{ end }} {{ .CommonLabels.alertname }}'
+          message: |
+            {{ range .Alerts -}}
+            **Namespace:** {{ .Labels.namespace }}
+            **Pod:** {{ .Labels.pod }}
+            **Severity:** {{ .Labels.severity }}
+            **Summary:** {{ .Annotations.summary }}
+            **Details:** {{ .Annotations.description }}
+
+            {{ end -}}
