@@ -19,7 +19,8 @@ spec:
             prometheusSpec:
               serviceMonitorSelector: {}
               serviceMonitorNamespaceSelector: {}
-                    alertmanager:
+
+          alertmanager:
             alertmanagerSpec:
               alertmanagerConfigSelector:
                 matchLabels:
