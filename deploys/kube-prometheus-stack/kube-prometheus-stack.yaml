@@ -20,10 +20,10 @@ spec:
               serviceMonitorSelector: {}
               serviceMonitorNamespaceSelector: {}
                     alertmanager:
-          alertmanagerSpec:
-            alertmanagerConfigSelector:
-              matchLabels:
-                app.kubernetes.io/component: pod-alerts
+            alertmanagerSpec:
+              alertmanagerConfigSelector:
+                matchLabels:
+                  app.kubernetes.io/component: pod-alerts
 
     - repoURL: https://github.com/rmblau/argocd.git
       targetRevision: main
