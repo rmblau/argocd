@@ -22,7 +22,8 @@ spec:
             enabled: false
           image:
             repository: actualbudget/actualbudget
-            tag: 26.11.0
+            tag: latest
+            pullPolicy: Always
   destination:
     server: https://kubernetes.default.svc
     namespace: actualbudget
