@@ -20,6 +20,9 @@ spec:
             size: 10Gi
           ingress:
             enabled: false
+          image:
+            repository: actualbudget/actualbudget
+            tag: 26.11.0
   destination:
     server: https://kubernetes.default.svc
     namespace: actualbudget
