@@ -21,7 +21,7 @@ spec:
           ingress:
             enabled: false
           image:
-            repository: actualbudget/actualbudget
+            repository: actualbudget/actual-server
             tag: latest
             pullPolicy: Always
   destination:
